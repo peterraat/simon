@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Simon Memory Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Landing -->
+      <section id="landing-screen" class="screen active">
+        <div class="card">
+          <h1>Simon Memory Game</h1>
+          <p class="subtitle">
+            Play solo or challenge friends online. First player hosts the lobby
+            for multiplayer.
+          </p>
+
+          <!-- Mode toggle -->
+          <div class="mode-toggle">
+            <button id="single-mode-btn" class="mode-btn mode-btn-active">
+              Single Player
+            </button>
+            <button id="multi-mode-btn" class="mode-btn">
+              Multiplayer
+            </button>
+          </div>
+
+          <!-- Single-player form -->
+          <div id="single-form">
+            <label>
+              Your name
+              <input
+                id="single-name-input"
+                type="text"
+                placeholder="Enter your name (optional)"
+              />
+            </label>
+
+            <label>
+              Difficulty
+              <select id="single-difficulty-select">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+                <option value="insane">Insane</option>
+              </select>
+            </label>
+
+            <button id="start-single-btn">Start Single Player</button>
+          </div>
+
+          <!-- Multiplayer host form (shown when NO active lobby) -->
+          <div id="host-form" class="hidden">
+            <label>
+              Your name
+              <input
+                id="host-name-input"
+                type="text"
+                placeholder="Enter your name"
+              />
+            </label>
+
+            <label>
+              Difficulty
+              <select id="difficulty-select">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+                <option value="insane">Insane</option>
+              </select>
+            </label>
+
+            <button id="start-lobby-btn">Start Lobby</button>
+          </div>
+
+          <!-- Multiplayer join form (shown when an active lobby already exists) -->
+          <div id="join-form" class="hidden">
+            <p id="join-info"></p>
+
+            <label>
+              Your name
+              <input
+                id="join-name-input"
+                type="text"
+                placeholder="Enter your name"
+              />
+            </label>
+
+            <button id="join-lobby-btn">Join Game</button>
+          </div>
+
+          <p id="landing-error" class="error"></p>
+        </div>
+      </section>
+
+      <!-- Lobby -->
+      <section id="lobby-screen" class="screen">
+        <div class="card">
+          <h2>Lobby</h2>
+          <p>
+            Difficulty:
+            <span id="lobby-difficulty"></span>
+          </p>
+          <p>
+            Game starts in
+            <span id="lobby-countdown">30</span>
+            seconds
+          </p>
+
+          <h3>Players</h3>
+          <ul id="lobby-players"></ul>
+
+          <p class="small">
+            Anyone who opens this site and enters a name before the countdown
+            ends will join this game automatically.
+          </p>
+        </div>
+      </section>
+
+      <!-- Game -->
+      <section id="game-screen" class="screen">
+        <div class="game-layout">
+          <div class="game-main">
+            <div class="status-bar">
+              <div id="round-info">Round 1</div>
+              <div id="status-message">Watch the pattern…</div>
+            </div>
+
+            <!-- 3-2-1 countdown overlay -->
+            <div id="countdown-overlay" class="hidden">
+              <div id="countdown-number">3</div>
+            </div>
+
+            <div class="board">
+              <!-- Main Simon image -->
+              <img
+                id="simon-image"
+                src="/images/01_simon_no_lights.png"
+                alt="Simon game"
+              />
+
+              <!-- Invisible, fat-finger-friendly hit areas (four big quadrants) -->
+              <div class="pad pad-green" data-color="green"></div>
+              <div class="pad pad-red" data-color="red"></div>
+              <div class="pad pad-yellow" data-color="yellow"></div>
+              <div class="pad pad-blue" data-color="blue"></div>
+            </div>
+
+            <!-- Game actions (Give Up) -->
+            <div class="game-actions">
+              <button id="give-up-btn" class="give-up-btn">
+                Give Up
+              </button>
+            </div>
+          </div>
+
+          <aside class="sidebar">
+            <h3>Players</h3>
+            <ul id="game-players"></ul>
+          </aside>
+        </div>
+
+        <!-- Elimination pill -->
+        <div id="elimination-pill" class="elimination-pill hidden"></div>
+      </section>
+
+      <!-- Game Over -->
+      <section id="gameover-screen" class="screen">
+        <div class="card">
+          <h2>Game Over</h2>
+          <h3>Leaderboard</h3>
+          <ol id="leaderboard-list"></ol>
+          <button id="back-to-home-btn">Back to Home</button>
+        </div>
+      </section>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/client.js"></script>
+  </body>
+</html>
