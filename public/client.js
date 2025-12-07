@@ -43,7 +43,8 @@ const simonImage = document.getElementById("simon-image");
 const countdownOverlay = document.getElementById("countdown-overlay");
 const countdownNumberEl = document.getElementById("countdown-number");
 
-const leaderboardList = document.getElementById("leaderboard-list");
+// NEW leaderboard tbody
+const leaderboardBody = document.getElementById("leaderboard-body");
 const backToHomeBtn = document.getElementById("back-to-home-btn");
 
 const eliminationPill = document.getElementById("elimination-pill");
@@ -57,7 +58,7 @@ let mode = "single"; // "single" or "multi"
 let currentRoomId = null;
 let myName = "";
 
-// multiplayer state (client side only)
+// multiplayer state
 let inputEnabled = false;
 let playingSequence = false;
 
@@ -66,7 +67,8 @@ const singleDifficultyConfig = {
   easy: { onTime: 800, offTime: 400 },
   medium: { onTime: 600, offTime: 300 },
   hard: { onTime: 400, offTime: 200 },
-  insane: { onTime: 300, offTime: 150 }
+  insane: { onTime: 300, offTime: 150 },
+  impossible: { onTime: 220, offTime: 120 }
 };
 
 let spDifficulty = "easy";
@@ -74,6 +76,7 @@ let spSequence = [];
 let spRound = 0;
 let spInputIndex = 0;
 let spGameOver = false;
+let spStartTime = 0;
 
 // fixed tone length so sound feels consistent on all speeds
 const BASE_TONE_DURATION_MS = 260;
@@ -96,7 +99,6 @@ Object.values(IMAGE_MAP).forEach((src) => {
 });
 
 // ===== External audio files =====
-// Make sure these exist in /public/media/
 const countdownAudio = new Audio("/media/321.mp3");
 const wrongAudio = new Audio("/media/wrong_sound_effect.mp3");
 
@@ -172,8 +174,6 @@ function setPadInteractivity(enabled) {
 }
 
 // Visual duration can be different from tone duration.
-// - visualDuration: how long the light stays on
-// - tone: fixed BASE_TONE_DURATION_MS so it always sounds full
 function flashPad(color, visualDurationOverride) {
   const visualDuration = visualDurationOverride || BASE_TONE_DURATION_MS;
 
@@ -292,6 +292,46 @@ function showEliminationPill(name, roundsSurvived) {
   }, 2000);
 }
 
+// ===== Leaderboard rendering (single + multi share this) =====
+function renderLeaderboard(rows) {
+  if (!leaderboardBody) return;
+
+  leaderboardBody.innerHTML = "";
+
+  rows.forEach((row, index) => {
+    const tr = document.createElement("tr");
+
+    const tdRank = document.createElement("td");
+    tdRank.textContent = String(index + 1);
+
+    const tdName = document.createElement("td");
+    tdName.textContent = row.name || "Player";
+
+    const tdCorrect = document.createElement("td");
+    tdCorrect.textContent =
+      typeof row.correct === "number" ? row.correct.toString() : "0";
+
+    const tdTime = document.createElement("td");
+    if (typeof row.timeSeconds === "number") {
+      tdTime.textContent = `${row.timeSeconds.toFixed(1)}s`;
+    } else {
+      tdTime.textContent = "–";
+    }
+
+    tdRank.classList.add("col-rank");
+    tdName.classList.add("col-name");
+    tdCorrect.classList.add("col-correct");
+    tdTime.classList.add("col-time");
+
+    tr.appendChild(tdRank);
+    tr.appendChild(tdName);
+    tr.appendChild(tdCorrect);
+    tr.appendChild(tdTime);
+
+    leaderboardBody.appendChild(tr);
+  });
+}
+
 // ===== mode switching =====
 function setMode(newMode) {
   mode = newMode;
@@ -323,6 +363,7 @@ function startSingleGameWithCountdown(name, difficulty) {
   spRound = 0;
   spInputIndex = 0;
   spGameOver = false;
+  spStartTime = Date.now();
 
   showScreen(gameScreen);
   gamePlayersList.innerHTML = "";
@@ -378,13 +419,17 @@ function handleSingleInput(color) {
       singleDifficultyConfig[spDifficulty] || singleDifficultyConfig.easy;
 
     playSequencePassive(spSequence, cfg.onTime, cfg.offTime, () => {
-      leaderboardList.innerHTML = "";
-      const li = document.createElement("li");
       const survived = Math.max(spRound - 1, 0);
-      li.textContent = `${myName} — survived ${survived} round${
-        survived === 1 ? "" : "s"
-      }`;
-      leaderboardList.appendChild(li);
+      const timeSec =
+        spStartTime > 0 ? (Date.now() - spStartTime) / 1000 : null;
+
+      renderLeaderboard([
+        {
+          name: myName,
+          correct: survived,
+          timeSeconds: timeSec
+        }
+      ]);
 
       setTimeout(() => {
         showScreen(gameoverScreen);
@@ -413,11 +458,17 @@ function handleSingleGiveUp() {
   statusMessage.textContent = "You gave up!";
 
   const roundDisplay = spRound > 0 ? spRound : 1;
+  const survived = Math.max(roundDisplay - 1, 0);
+  const timeSec =
+    spStartTime > 0 ? (Date.now() - spStartTime) / 1000 : null;
 
-  leaderboardList.innerHTML = "";
-  const li = document.createElement("li");
-  li.textContent = `${myName} — gave up (Round ${roundDisplay})`;
-  leaderboardList.appendChild(li);
+  renderLeaderboard([
+    {
+      name: myName,
+      correct: survived,
+      timeSeconds: timeSec
+    }
+  ]);
 
   setTimeout(() => {
     showScreen(gameoverScreen);
@@ -613,15 +664,13 @@ socket.on("roundSummary", ({ summary }) => {
 socket.on("gameOver", ({ leaderboard }) => {
   if (mode !== "multi") return;
 
-  leaderboardList.innerHTML = "";
-  leaderboard.forEach((p, idx) => {
-    const li = document.createElement("li");
-    const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "⬤";
-    li.textContent = `${medal} ${p.name} — survived ${
-      p.roundsSurvived
-    } round${p.roundsSurvived === 1 ? "" : "s"}`;
-    leaderboardList.appendChild(li);
-  });
+  const rows = leaderboard.map((p) => ({
+    name: p.name,
+    correct: p.roundsSurvived,
+    timeSeconds:
+      typeof p.timeSeconds === "number" ? p.timeSeconds : null
+  }));
 
+  renderLeaderboard(rows);
   showScreen(gameoverScreen);
 });

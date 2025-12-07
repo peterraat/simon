@@ -11,7 +11,8 @@
       <!-- Landing -->
       <section id="landing-screen" class="screen active">
         <div class="card">
-          <h1>Simon Memory Game</h1>
+          <h1 class="neon-title">Simon Memory Game</h1>
+
           <p class="subtitle">
             Play solo or challenge friends online. First player hosts the lobby
             for multiplayer.
@@ -28,65 +29,85 @@
           </div>
 
           <!-- Single-player form -->
-          <div id="single-form">
-            <label>
-              Your name
-              <input
-                id="single-name-input"
-                type="text"
-                placeholder="Enter your name (optional)"
-              />
-            </label>
+          <div id="single-form" class="input-panel">
+            <div class="field-row">
+              <div class="field">
+                <div class="field-label">Your Name</div>
+                <div class="glass-field">
+                  <span class="field-icon">👤</span>
+                  <input
+                    id="single-name-input"
+                    type="text"
+                    placeholder="Enter your name (optional)"
+                  />
+                </div>
+              </div>
 
-            <label>
-              Difficulty
-              <select id="single-difficulty-select">
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-                <option value="insane">Insane</option>
-              </select>
-            </label>
+              <div class="field">
+                <div class="field-label">Difficulty</div>
+                <div class="glass-field">
+                  <span class="field-icon">⚡</span>
+                  <select id="single-difficulty-select">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                    <option value="insane">Insane</option>
+                     <option value="impossible">Impossible</option>
+                  </select>
+                </div>
+              </div>
+            </div>
 
             <button id="start-single-btn">Start Single Player</button>
           </div>
 
           <!-- Multiplayer host form (shown when NO active lobby) -->
-          <div id="host-form" class="hidden">
-            <label>
-              Your name
-              <input
-                id="host-name-input"
-                type="text"
-                placeholder="Enter your name"
-              />
-            </label>
+          <div id="host-form" class="hidden input-panel">
+            <div class="field-row">
+              <div class="field">
+                <div class="field-label">Your Name</div>
+                <div class="glass-field">
+                  <span class="field-icon">👤</span>
+                  <input
+                    id="host-name-input"
+                    type="text"
+                    placeholder="Enter your name"
+                  />
+                </div>
+              </div>
 
-            <label>
-              Difficulty
-              <select id="difficulty-select">
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-                <option value="insane">Insane</option>
-              </select>
-            </label>
+              <div class="field">
+                <div class="field-label">Difficulty</div>
+                <div class="glass-field">
+                  <span class="field-icon">⚡</span>
+                  <select id="difficulty-select">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                    <option value="insane">Insane</option>
+                  </select>
+                </div>
+              </div>
+            </div>
 
-            <button id="start-lobby-btn">Start Lobby</button>
+            <button id="start-lobby-btn">Start Multiplayer Lobby</button>
           </div>
 
           <!-- Multiplayer join form (shown when an active lobby already exists) -->
-          <div id="join-form" class="hidden">
+          <div id="join-form" class="hidden input-panel">
             <p id="join-info"></p>
 
-            <label>
-              Your name
-              <input
-                id="join-name-input"
-                type="text"
-                placeholder="Enter your name"
-              />
-            </label>
+            <div class="field">
+              <div class="field-label">Your Name</div>
+              <div class="glass-field">
+                <span class="field-icon">👤</span>
+                <input
+                  id="join-name-input"
+                  type="text"
+                  placeholder="Enter your name"
+                />
+              </div>
+            </div>
 
             <button id="join-lobby-btn">Join Game</button>
           </div>
@@ -166,15 +187,31 @@
         <div id="elimination-pill" class="elimination-pill hidden"></div>
       </section>
 
-      <!-- Game Over -->
-      <section id="gameover-screen" class="screen">
-        <div class="card">
-          <h2>Game Over</h2>
-          <h3>Leaderboard</h3>
-          <ol id="leaderboard-list"></ol>
-          <button id="back-to-home-btn">Back to Home</button>
-        </div>
-      </section>
+<section id="gameover-screen" class="screen">
+  <div class="card leaderboard-card">
+    <div class="leaderboard-header">
+      <span class="leaderboard-icon">🏆</span>
+      <span class="leaderboard-title">Leaderboard</span>
+    </div>
+
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th class="col-rank">#</th>
+          <th class="col-name">Name</th>
+          <th class="col-correct">Correct</th>
+          <th class="col-time">Time</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body"></tbody>
+    </table>
+
+    <button id="back-to-home-btn" class="leaderboard-close-btn">
+      Close
+    </button>
+  </div>
+</section>
+
     </div>
 
     <script src="/socket.io/socket.io.js"></script>

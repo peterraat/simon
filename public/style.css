@@ -96,6 +96,8 @@ h1 {
   color: #111827;
 }
 
+/* Legacy label / input defaults (overridden for glass fields) */
+
 label {
   display: block;
   margin-bottom: 12px;
@@ -113,6 +115,8 @@ select {
   color: #f9fafb;
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.6);
 }
+
+/* Buttons */
 
 button {
   margin-top: 16px;
@@ -378,5 +382,327 @@ button:active {
   .give-up-btn {
     width: 100%;
     max-width: 260px;
+  }
+}
+
+/* ============================================
+   CUSTOM INPUTS AND FORM STYLES
+   ============================================ */
+
+/* Container spacing */
+.input-panel {
+  margin-top: 8px;
+}
+
+/* Name + difficulty side by side on desktop, stacked on mobile */
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.field {
+  flex: 1 1 160px;
+}
+
+/* 🟢 FIX: Titles Name and Difficulty - Bold and White 🟢 */
+.field-label {
+  font-size: 1.0rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  /* NEW: Set to white and bold */
+  color: #ffffff !important;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+/* 🔵 1. LIGHT BLUE PILL BACKGROUND STYLES (glass-field) 🔵 */
+.glass-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+
+  /* FIX: Aggressively set to very light blue background */
+  background: #f0f9ff !important; 
+  /* MODIFIED: Subtle light blue border */
+  border: 1px solid #bae6fd;
+
+  /* Softer, lighter shadow */
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  /* NEW: Font color black and slightly bold for the pill container (as requested) */
+  color: #000000 !important; 
+  font-weight: 600;
+}
+
+
+/* Icon bubble */
+.field-icon {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  background: radial-gradient(circle at 30% 20%, #facc15, #f97316);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+}
+
+/* 🔵 2. BLACK, BOLD TEXT STYLES (glass-field inputs) 🔵 */
+/* This is the key rule that styles the text typed inside the pill inputs */
+.glass-field input,
+.glass-field select {
+  /* FIX: Ensure the input area is transparent to show the pill background */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin-top: 0;
+  padding: 4px 4px;
+  width: 100%;
+  /* FIX: Black text color */
+  color: #000000 !important;
+  /* FIX: Slightly bold font weight */
+  font-weight: 600; 
+  font-size: 0.9rem;
+}
+
+/* Focus halo on the shell */
+.glass-field:focus-within {
+  /* MODIFIED: Brighter blue border on focus */
+  border-color: #3b82f6;
+  /* MODIFIED: Blue focus ring */
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Custom arrow for selects */
+.glass-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 26px;
+  /* MODIFIED: Changed arrow color to black (#000000) */
+  background-image:
+    linear-gradient(45deg, #000000 50%, transparent 50%),
+    linear-gradient(135deg, #000000 50%, transparent 50%);
+  background-position: calc(100% - 16px) 50%, calc(100% - 10px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+}
+
+/* Slight dim on placeholder */
+.glass-field input::placeholder {
+  /* MODIFIED: Lighter gray for placeholder */
+  color: #94a3b8;
+}
+
+/* Ensure dropdown options are visible on dark theme */
+.glass-field select {
+  /* MODIFIED: Black text for the selected option */
+  color: #000000;
+}
+
+/* Style the popup list (many browsers honour this now) */
+.glass-field select option {
+  /* MODIFIED: Light blue background and black text for options */
+  background-color: #f0f9ff;
+  color: #000000;
+}
+
+
+/* 📱 3. MOBILE SPACING FIXES 📱 */
+@media (max-width: 480px) {
+  /* FIX: Aggressively eliminate the margin below the label text */
+  label {
+    margin-bottom: 0 !important; 
+  }
+
+  /* FIX: Aggressively eliminate the margin above the input panel */
+  .input-panel {
+    margin-top: 0 !important; 
+  }
+  
+  .field-row {
+    flex-direction: column;
+    /* Maintain a small gap if needed for readability, or use 0px */
+    gap: 4px !important; 
+    /* Aggressively eliminate bottom margin on the row container */
+    margin-bottom: 0 !important; 
+  }
+
+  /* Ensure the container of the pill has no extra bottom margin */
+  .field {
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Additional responsive tweaks */
+@media (max-width: 760px) {
+  body {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  #app {
+    padding-top: 20px;
+  }
+}
+
+/* ============================================================
+   REMOVE ANDROID/SAMSUNG TAP HIGHLIGHT GREY EFFECT
+   ============================================================ */
+
+/* 1. Chrome / Samsung Browser tap highlight */
+* {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 2. Remove focus outline from buttons/links/pads on tap */
+button,
+a,
+.pad,
+.mode-btn,
+.give-up-btn,
+input,
+select {
+  outline: none !important;
+}
+
+/* 3. Prevent Android from showing "pressed" grey overlay */
+button:active,
+a:active,
+.pad:active,
+.mode-btn:active,
+.give-up-btn:active {
+  background-color: transparent !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* ============================================
+   LEADERBOARD MODAL STYLE
+   ============================================ */
+
+.leaderboard-card {
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.leaderboard-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  background: radial-gradient(circle at 30% 20%, #facc15, #f97316);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.7);
+}
+
+.leaderboard-title {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Table layout */
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.leaderboard-table thead {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  padding: 6px 4px;
+}
+
+.leaderboard-table th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+/* Column alignment */
+.col-rank {
+  width: 2.2em;
+  text-align: left;
+}
+.col-name {
+  text-align: left;
+}
+.col-correct,
+.col-time {
+  width: 4.5em;
+  text-align: right;
+}
+
+/* Body rows */
+.leaderboard-table tbody tr {
+  border-bottom: 1px solid rgba(30, 64, 175, 0.45);
+}
+
+.leaderboard-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-table tbody tr:nth-child(odd) {
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.leaderboard-table tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.25);
+}
+
+/* Close button style */
+.leaderboard-close-btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+
+/* ============================================
+   THIN, SHARP, BRIGHT PURPLE TITLE
+   ============================================ */
+
+.neon-title {
+  font-size: 2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  margin-bottom: 10px;
+
+  /* bright tube colour (solid) */
+  color: #d8b4fe;  /* nice bright purple */
+}
+
+/* Mobile: smaller so it fits on one line */
+@media (max-width: 480px) {
+  .neon-title {
+    font-size: 1.1rem;
+    letter-spacing: 0.14em;
   }
 }

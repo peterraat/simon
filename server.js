@@ -17,10 +17,13 @@ const rooms = {};
 const COLORS = ["green", "red", "yellow", "blue"];
 
 const difficultyConfig = {
-  easy: { onTime: 800, offTime: 400, label: "Easy" },
-  medium: { onTime: 600, offTime: 300, label: "Medium" },
-  hard: { onTime: 400, offTime: 200, label: "Hard" },
-  insane: { onTime: 300, offTime: 150, label: "Insane" }
+  easy:       { onTime: 800, offTime: 400, label: "Easy" },
+  medium:     { onTime: 600, offTime: 300, label: "Medium" },
+  hard:       { onTime: 400, offTime: 200, label: "Hard" },
+  insane:     { onTime: 300, offTime: 150, label: "Insane" },
+
+  // ⭐ NEW IMPOSSIBLE MODE ⭐
+  impossible: { onTime: 220, offTime: 120, label: "Impossible" }
 };
 
 function generateRoomId() {
@@ -78,6 +81,9 @@ function startGame(room) {
   const cfg = difficultyConfig[room.difficulty] || difficultyConfig.easy;
   room.onTime = cfg.onTime;
   room.offTime = cfg.offTime;
+
+  // ⏱ start multiplayer game timer
+  room.gameStartTime = Date.now();
 
   room.players.forEach((p) => {
     p.alive = true;
@@ -171,11 +177,18 @@ function endGame(room) {
     (a, b) => b.roundsSurvived - a.roundsSurvived
   );
 
+  // ⏱ compute total multiplayer game time
+  const now = Date.now();
+  const gameDurationSeconds = room.gameStartTime
+    ? Math.max(0, (now - room.gameStartTime) / 1000)
+    : null;
+
   io.to(room.id).emit("gameOver", {
     leaderboard: leaderboard.map((p) => ({
       id: p.id,
       name: p.name,
-      roundsSurvived: p.roundsSurvived
+      roundsSurvived: p.roundsSurvived,
+      timeSeconds: gameDurationSeconds
     }))
   });
 
@@ -238,7 +251,8 @@ io.on("connection", (socket) => {
       round: 0,
       sequence: [],
       onTime: cfg.onTime,
-      offTime: cfg.offTime
+      offTime: cfg.offTime,
+      gameStartTime: null
     };
 
     rooms[roomId] = room;
@@ -368,7 +382,6 @@ io.on("connection", (socket) => {
     if (!player || !player.alive || player.finishedRound) return;
 
     player.alive = false;
-    // They gave up during this round -> show current round
     player.roundsSurvived = room.round || 1;
     player.finishedRound = true;
 
