@@ -51,6 +51,7 @@ body {
   padding: 24px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.9);
   border: 2px solid rgba(96, 165, 250, 0.6);
+  margin-top: 20px;
 }
 
 h1,
@@ -403,7 +404,7 @@ button:active {
 }
 
 .field {
-  flex: 1 1 160px;
+  flex: 1 1 120px;
 }
 
 /* 🟢 FIX: Titles Name and Difficulty - Bold and White 🟢 */
@@ -533,15 +534,41 @@ button:active {
   .field-row {
     flex-direction: column;
     /* Maintain a small gap if needed for readability, or use 0px */
-    gap: 4px !important; 
+    gap: 2px !important; 
     /* Aggressively eliminate bottom margin on the row container */
-    margin-bottom: 0 !important; 
+    margin-bottom: 4px !important; 
   }
 
   /* Ensure the container of the pill has no extra bottom margin */
   .field {
     margin-bottom: 0 !important;
+    padding: 0 !important;
+    flex: 0 0 auto;
   }
+
+  /* 👇 ADD THIS */
+  button {
+    margin-top: 6px;
+  }
+
+.field-row {
+    gap: 2px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .input-panel {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .field {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+
+
+
 }
 
 /* Additional responsive tweaks */
