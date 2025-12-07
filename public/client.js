@@ -43,7 +43,6 @@ const simonImage = document.getElementById("simon-image");
 const countdownOverlay = document.getElementById("countdown-overlay");
 const countdownNumberEl = document.getElementById("countdown-number");
 
-// NEW leaderboard tbody
 const leaderboardBody = document.getElementById("leaderboard-body");
 const backToHomeBtn = document.getElementById("back-to-home-btn");
 
@@ -52,6 +51,7 @@ const giveUpBtn = document.getElementById("give-up-btn");
 
 // ===== Local state =====
 const COLORS = ["green", "red", "yellow", "blue"];
+const MAX_NAME_LENGTH = 12;
 
 let mode = "single"; // "single" or "multi"
 
@@ -173,7 +173,6 @@ function setPadInteractivity(enabled) {
   });
 }
 
-// Visual duration can be different from tone duration.
 function flashPad(color, visualDurationOverride) {
   const visualDuration = visualDurationOverride || BASE_TONE_DURATION_MS;
 
@@ -194,7 +193,7 @@ function playSequence(sequence, onTime, offTime) {
   sequence.forEach((color, index) => {
     const t = index * (onTime + offTime);
     setTimeout(() => {
-      flashPad(color, onTime); // visual speed = onTime, sound fixed
+      flashPad(color, onTime);
     }, t);
   });
 
@@ -237,7 +236,6 @@ function runCountdown(onDone) {
   countdownNumberEl.textContent = count.toString();
   countdownOverlay.classList.remove("hidden");
 
-  // Play 3-2-1 sound once
   try {
     countdownAudio.currentTime = 0;
     countdownAudio.play();
@@ -256,11 +254,9 @@ function runCountdown(onDone) {
   }, 2000);
 
   setTimeout(() => {
-    // Hide overlay BEFORE the game starts
     countdownOverlay.classList.add("hidden");
     countdownNumberEl.textContent = "";
 
-    // Small pause so they "feel" the start
     if (typeof onDone === "function") {
       setTimeout(() => {
         onDone();
@@ -269,7 +265,7 @@ function runCountdown(onDone) {
   }, 3000);
 }
 
-// Show "Peter is out of the game (Round 5)" pill at the bottom
+// Show "Peter is out of the game (Round 5)" pill
 function showEliminationPill(name, roundsSurvived) {
   if (!eliminationPill) return;
 
@@ -281,9 +277,8 @@ function showEliminationPill(name, roundsSurvived) {
   eliminationPill.textContent = `${name} is out of the game${roundText}`;
 
   eliminationPill.classList.remove("hidden");
-  // restart animation
   eliminationPill.style.animation = "none";
-  void eliminationPill.offsetWidth; // force reflow
+  void eliminationPill.offsetWidth;
   eliminationPill.style.animation = "";
   eliminationPill.style.animation = "pillSlideUp 0.4s ease-out";
 
@@ -292,7 +287,18 @@ function showEliminationPill(name, roundsSurvived) {
   }, 2000);
 }
 
-// ===== Leaderboard rendering (single + multi share this) =====
+// ===== Name sanitiser (client-side) =====
+function sanitizeNameInput(inputEl, fallback) {
+  let name = (inputEl.value || "").trim();
+  if (!name) name = fallback;
+  if (name.length > MAX_NAME_LENGTH) {
+    name = name.slice(0, MAX_NAME_LENGTH);
+    inputEl.value = name; // reflect truncation in the UI
+  }
+  return name;
+}
+
+// ===== Leaderboard rendering =====
 function renderLeaderboard(rows) {
   if (!leaderboardBody) return;
 
@@ -349,7 +355,6 @@ function setMode(newMode) {
     multiModeBtn.classList.add("mode-btn-active");
 
     singleForm.classList.add("hidden");
-    // ask server if lobby exists
     socket.emit("checkActiveLobby");
   }
 }
@@ -374,7 +379,6 @@ function startSingleGameWithCountdown(name, difficulty) {
   setPadInteractivity(false);
   simonImage.src = IMAGE_MAP.off;
 
-  // Run the 3-2-1, then start the first round
   runCountdown(() => {
     nextSingleRound();
   });
@@ -409,7 +413,6 @@ function handleSingleInput(color) {
   const expected = spSequence[spInputIndex];
 
   if (color !== expected) {
-    // WRONG: end game, play wrong sound, replay full correct sequence, then show game over
     spGameOver = true;
     setPadInteractivity(false);
     statusMessage.textContent = "Wrong! Watch the correct pattern.";
@@ -439,7 +442,6 @@ function handleSingleInput(color) {
     return;
   }
 
-  // Correct step
   spInputIndex += 1;
   if (spInputIndex === spSequence.length) {
     statusMessage.textContent = "Round complete!";
@@ -450,7 +452,6 @@ function handleSingleInput(color) {
   }
 }
 
-// Single-player "Give Up"
 function handleSingleGiveUp() {
   if (spGameOver) return;
   spGameOver = true;
@@ -484,14 +485,14 @@ singleModeBtn.addEventListener("click", () => setMode("single"));
 multiModeBtn.addEventListener("click", () => setMode("multi"));
 
 startSingleBtn.addEventListener("click", () => {
-  const name = singleNameInput.value.trim();
+  const name = sanitizeNameInput(singleNameInput, "You");
   const difficulty = singleDifficultySelect.value;
   startSingleGameWithCountdown(name, difficulty);
 });
 
 startLobbyBtn.addEventListener("click", () => {
   landingError.textContent = "";
-  const name = hostNameInput.value.trim() || "Host";
+  const name = sanitizeNameInput(hostNameInput, "Host");
   const difficulty = difficultySelect.value;
   myName = name;
   socket.emit("createLobby", { name, difficulty });
@@ -499,12 +500,11 @@ startLobbyBtn.addEventListener("click", () => {
 
 joinLobbyBtn.addEventListener("click", () => {
   landingError.textContent = "";
-  const name = joinNameInput.value.trim() || "Player";
+  const name = sanitizeNameInput(joinNameInput, "Player");
   myName = name;
   socket.emit("joinLobby", { name });
 });
 
-// Give Up button (single + multi)
 giveUpBtn.addEventListener("click", () => {
   if (mode === "single") {
     handleSingleGiveUp();
@@ -513,14 +513,12 @@ giveUpBtn.addEventListener("click", () => {
   }
 });
 
-// Pad clicks (both modes)
+// Pad clicks
 pads.forEach((pad) => {
   pad.addEventListener("click", () => {
     if (!inputEnabled || playingSequence) return;
 
     const color = pad.dataset.color;
-
-    // visual duration for clicks (sound stays fixed)
     flashPad(color, 220);
 
     if (mode === "single") {
@@ -535,7 +533,7 @@ backToHomeBtn.addEventListener("click", () => {
   window.location.reload();
 });
 
-// ===== Socket events (multiplayer only) =====
+// ===== Socket events (multiplayer) =====
 socket.on("lobbyStatus", (payload) => {
   if (mode !== "multi") return;
 
@@ -603,7 +601,6 @@ socket.on("gameStart", ({ difficultyLabel }) => {
   gamePlayersList.innerHTML = "";
   simonImage.src = IMAGE_MAP.off;
 
-  // Show the same 3-2-1 countdown in multiplayer
   runCountdown(() => {
     statusMessage.textContent = "Watch the pattern…";
   });
@@ -640,7 +637,6 @@ socket.on("inputResult", ({ success, message }) => {
   statusMessage.textContent = message || (success ? "Good job!" : "Wrong!");
 });
 
-// show elimination pill when server says someone is out
 socket.on("playerEliminated", ({ name, roundsSurvived }) => {
   showEliminationPill(name, roundsSurvived);
 });

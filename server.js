@@ -13,7 +13,6 @@ app.use(express.static(path.join(__dirname, "public")));
 // ----- Game state -----
 
 const rooms = {};
-
 const COLORS = ["green", "red", "yellow", "blue"];
 
 const difficultyConfig = {
@@ -21,13 +20,22 @@ const difficultyConfig = {
   medium:     { onTime: 600, offTime: 300, label: "Medium" },
   hard:       { onTime: 400, offTime: 200, label: "Hard" },
   insane:     { onTime: 300, offTime: 150, label: "Insane" },
-
-  // ⭐ NEW IMPOSSIBLE MODE ⭐
   impossible: { onTime: 220, offTime: 120, label: "Impossible" }
 };
 
+const MAX_NAME_LENGTH = 12;
+
 function generateRoomId() {
   return Math.random().toString(36).slice(2, 8);
+}
+
+function sanitizeName(name, fallback) {
+  let n = (name || "").trim();
+  if (!n) n = fallback;
+  if (n.length > MAX_NAME_LENGTH) {
+    n = n.slice(0, MAX_NAME_LENGTH);
+  }
+  return n;
 }
 
 // ----- Helper functions -----
@@ -82,7 +90,7 @@ function startGame(room) {
   room.onTime = cfg.onTime;
   room.offTime = cfg.offTime;
 
-  // ⏱ start multiplayer game timer
+  // Start-of-game time
   room.gameStartTime = Date.now();
 
   room.players.forEach((p) => {
@@ -90,6 +98,10 @@ function startGame(room) {
     p.roundsSurvived = 0;
     p.inputIndex = 0;
     p.finishedRound = false;
+
+    // Per-player timing
+    p.startTime = room.gameStartTime;
+    p.endTime = null;
   });
 
   io.to(room.id).emit("gameStart", {
@@ -97,7 +109,7 @@ function startGame(room) {
     difficultyLabel: room.difficultyLabel
   });
 
-  // Wait for 3-2-1 countdown + a small buffer
+  // Wait for 3-2-1 countdown + small buffer
   setTimeout(() => {
     startNextRound(room);
   }, 3700);
@@ -155,15 +167,12 @@ function checkEndOfRound(room) {
   io.to(room.id).emit("roundSummary", { summary });
 
   const alivePlayers = room.players.filter((p) => p.alive);
+
+  // Co-op style: only end when ALL players are out
   if (alivePlayers.length === 0) {
     endGame(room);
-  } else if (alivePlayers.length === 1) {
-    const winner = alivePlayers[0];
-    if (winner.roundsSurvived < room.round) {
-      winner.roundsSurvived = room.round;
-    }
-    endGame(room);
   } else {
+    // At least one still alive → continue with next round
     setTimeout(() => {
       startNextRound(room);
     }, 1000);
@@ -173,23 +182,35 @@ function checkEndOfRound(room) {
 function endGame(room) {
   if (!room) return;
 
+  const now = Date.now();
+
+  // Fill in endTime for anyone still alive / missing it
+  room.players.forEach((p) => {
+    if (!p.endTime) {
+      p.endTime = now;
+    }
+  });
+
   const leaderboard = [...room.players].sort(
     (a, b) => b.roundsSurvived - a.roundsSurvived
   );
 
-  // ⏱ compute total multiplayer game time
-  const now = Date.now();
-  const gameDurationSeconds = room.gameStartTime
-    ? Math.max(0, (now - room.gameStartTime) / 1000)
-    : null;
-
   io.to(room.id).emit("gameOver", {
-    leaderboard: leaderboard.map((p) => ({
-      id: p.id,
-      name: p.name,
-      roundsSurvived: p.roundsSurvived,
-      timeSeconds: gameDurationSeconds
-    }))
+    leaderboard: leaderboard.map((p) => {
+      let timeSeconds = null;
+      if (p.startTime && p.endTime) {
+        timeSeconds = Math.max(
+          0,
+          (p.endTime - p.startTime) / 1000
+        );
+      }
+      return {
+        id: p.id,
+        name: p.name,
+        roundsSurvived: p.roundsSurvived,
+        timeSeconds
+      };
+    })
   });
 
   setTimeout(() => {
@@ -259,11 +280,13 @@ io.on("connection", (socket) => {
 
     const player = {
       id: socket.id,
-      name: name || "Host",
+      name: sanitizeName(name, "Host"),
       alive: true,
       roundsSurvived: 0,
       inputIndex: 0,
-      finishedRound: false
+      finishedRound: false,
+      startTime: null,
+      endTime: null
     };
     room.players.push(player);
 
@@ -298,11 +321,13 @@ io.on("connection", (socket) => {
 
     const player = {
       id: socket.id,
-      name: name || "Player",
+      name: sanitizeName(name, "Player"),
       alive: true,
       roundsSurvived: 0,
       inputIndex: 0,
-      finishedRound: false
+      finishedRound: false,
+      startTime: null,
+      endTime: null
     };
 
     lobby.players.push(player);
@@ -335,6 +360,7 @@ io.on("connection", (socket) => {
       player.alive = false;
       player.roundsSurvived = room.round;
       player.finishedRound = true;
+      if (!player.endTime) player.endTime = Date.now();
 
       io.to(roomId).emit("playerEliminated", {
         name: player.name,
@@ -384,6 +410,7 @@ io.on("connection", (socket) => {
     player.alive = false;
     player.roundsSurvived = room.round || 1;
     player.finishedRound = true;
+    if (!player.endTime) player.endTime = Date.now();
 
     io.to(roomId).emit("playerEliminated", {
       name: player.name,
@@ -419,6 +446,7 @@ io.on("connection", (socket) => {
     } else if (room.phase === "playing") {
       player.alive = false;
       player.finishedRound = true;
+      if (!player.endTime) player.endTime = Date.now();
       checkEndOfRound(room);
     }
   });
