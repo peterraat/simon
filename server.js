@@ -425,6 +425,36 @@ io.on("connection", (socket) => {
     checkEndOfRound(room);
   });
 
+  // 🔹 NEW: host can skip countdown when everyone is ready
+  socket.on("hostStartEarly", () => {
+    const roomId = socket.data.roomId;
+    if (!roomId) return;
+    const room = rooms[roomId];
+    if (!room || room.phase !== "lobby") return;
+
+    // Only host can trigger this
+    if (room.hostId !== socket.id) return;
+
+    // Optional: require at least one player
+    if (room.players.length < 1) {
+      socket.emit(
+        "errorMessage",
+        "You need at least one player to start."
+      );
+      return;
+    }
+
+    // Stop lobby countdown timer if still running
+    if (room.lobbyTimer) {
+      clearInterval(room.lobbyTimer);
+      room.lobbyTimer = null;
+    }
+
+    // Set lobbyEndTime to now (mainly for consistency) and start game
+    room.lobbyEndTime = Date.now();
+    startGame(room);
+  });
+
   socket.on("disconnect", () => {
     const roomId = socket.data.roomId;
     if (!roomId) return;

@@ -33,6 +33,9 @@ const lobbyDifficulty = document.getElementById("lobby-difficulty");
 const lobbyCountdown = document.getElementById("lobby-countdown");
 const lobbyPlayersList = document.getElementById("lobby-players");
 
+// “Start now” button on lobby screen (host only)
+const startNowBtn = document.getElementById("start-now-btn");
+
 const roundInfo = document.getElementById("round-info");
 const statusMessage = document.getElementById("status-message");
 const gamePlayersList = document.getElementById("game-players");
@@ -54,6 +57,7 @@ const COLORS = ["green", "red", "yellow", "blue"];
 const MAX_NAME_LENGTH = 12;
 
 let mode = "single"; // "single" or "multi"
+let isHost = false; // are we the host in this lobby?
 
 let currentRoomId = null;
 let myName = "";
@@ -298,7 +302,7 @@ function sanitizeNameInput(inputEl, fallback) {
   return name;
 }
 
-// ===== Leaderboard rendering =====
+// ===== Leaderboard render with slide-in animation =====
 function renderLeaderboard(rows) {
   if (!leaderboardBody) return;
 
@@ -334,6 +338,10 @@ function renderLeaderboard(rows) {
     tr.appendChild(tdCorrect);
     tr.appendChild(tdTime);
 
+    // slide-in animation per row, staggered from the first
+    tr.classList.add("leaderboard-row-animate");
+    tr.style.animationDelay = `${index * 0.08}s`;
+
     leaderboardBody.appendChild(tr);
   });
 }
@@ -344,6 +352,9 @@ function setMode(newMode) {
   landingError.textContent = "";
 
   if (newMode === "single") {
+    isHost = false;
+    if (startNowBtn) startNowBtn.classList.add("hidden");
+
     singleModeBtn.classList.add("mode-btn-active");
     multiModeBtn.classList.remove("mode-btn-active");
 
@@ -495,6 +506,8 @@ startLobbyBtn.addEventListener("click", () => {
   const name = sanitizeNameInput(hostNameInput, "Host");
   const difficulty = difficultySelect.value;
   myName = name;
+
+  isHost = true;
   socket.emit("createLobby", { name, difficulty });
 });
 
@@ -502,8 +515,17 @@ joinLobbyBtn.addEventListener("click", () => {
   landingError.textContent = "";
   const name = sanitizeNameInput(joinNameInput, "Player");
   myName = name;
+  isHost = false;
   socket.emit("joinLobby", { name });
 });
+
+// Host “start now” button → ask server to skip countdown
+if (startNowBtn) {
+  startNowBtn.addEventListener("click", () => {
+    if (!isHost) return;
+    socket.emit("hostStartEarly");
+  });
+}
 
 giveUpBtn.addEventListener("click", () => {
   if (mode === "single") {
@@ -537,6 +559,10 @@ backToHomeBtn.addEventListener("click", () => {
 socket.on("lobbyStatus", (payload) => {
   if (mode !== "multi") return;
 
+  // We are not the existing host in this flow
+  isHost = false;
+  if (startNowBtn) startNowBtn.classList.add("hidden");
+
   if (payload.hasActiveLobby) {
     hostForm.classList.add("hidden");
     joinForm.classList.remove("hidden");
@@ -564,6 +590,9 @@ socket.on("lobbyCreated", ({ roomId, difficulty, difficultyLabel }) => {
   lobbyCountdown.textContent = "30";
   lobbyPlayersList.innerHTML = "";
   showScreen(lobbyScreen);
+
+  isHost = true;
+  if (startNowBtn) startNowBtn.classList.remove("hidden");
 });
 
 socket.on("joinedLobby", ({ roomId, difficulty, difficultyLabel }) => {
@@ -572,6 +601,9 @@ socket.on("joinedLobby", ({ roomId, difficulty, difficultyLabel }) => {
   lobbyDifficulty.textContent = difficultyLabel || difficulty;
   lobbyPlayersList.innerHTML = "";
   showScreen(lobbyScreen);
+
+  isHost = false;
+  if (startNowBtn) startNowBtn.classList.add("hidden");
 });
 
 socket.on(
@@ -593,6 +625,8 @@ socket.on(
 
 socket.on("gameStart", ({ difficultyLabel }) => {
   if (mode !== "multi") return;
+
+  if (startNowBtn) startNowBtn.classList.add("hidden");
 
   showScreen(gameScreen);
   setPadInteractivity(false);
