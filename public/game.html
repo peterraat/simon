@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Simon Memory Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Landing -->
+      <section id="landing-screen" class="screen active">
+        <div class="card">
+          <h1 class="neon-title">Simon Memory Game</h1>
+
+          <p class="subtitle">
+            Play solo or challenge friends online. First player hosts the lobby
+            for multiplayer.
+          </p>
+
+          <!-- Mode toggle -->
+          <div class="mode-toggle">
+            <button id="single-mode-btn" class="mode-btn mode-btn-active">
+              Single Player
+            </button>
+            <button id="multi-mode-btn" class="mode-btn">
+              Multiplayer
+            </button>
+          </div>
+
+          <!-- Single-player form -->
+          <div id="single-form" class="input-panel">
+            <div class="field-row">
+              <div class="field">
+                <div class="field-label">Your Name</div>
+                <div class="glass-field">
+                  <span class="field-icon">👤</span>
+                  <input
+                    id="single-name-input"
+                    type="text"
+                    placeholder="Enter your name (optional)"
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="field-label">Difficulty</div>
+                <div class="glass-field">
+                  <span class="field-icon">⚡</span>
+                  <select id="single-difficulty-select">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                    <option value="insane">Insane</option>
+                     <option value="impossible">Impossible</option>
+                     
+                                      </select>
+                </div>
+              </div>
+            </div>
+
+            <button id="start-single-btn">Start Single Player</button>
+          </div>
+
+          <!-- Multiplayer host form (shown when NO active lobby) -->
+          <div id="host-form" class="hidden input-panel">
+            <div class="field-row">
+              <div class="field">
+                <div class="field-label">Your Name</div>
+                <div class="glass-field">
+                  <span class="field-icon">👤</span>
+                  <input
+                    id="host-name-input"
+                    type="text"
+                    placeholder="Enter your name"
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="field-label">Difficulty</div>
+                <div class="glass-field">
+                  <span class="field-icon">⚡</span>
+                  <select id="difficulty-select">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                    <option value="insane">Insane</option>
+                    <option value="impossible">Impossible</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button id="start-lobby-btn">Start Multiplayer Lobby</button>
+          </div>
+
+          <!-- Multiplayer join form (shown when an active lobby already exists) -->
+          <div id="join-form" class="hidden input-panel">
+            <p id="join-info"></p>
+
+            <div class="field">
+              <div class="field-label">Your Name</div>
+              <div class="glass-field">
+                <span class="field-icon">👤</span>
+                <input
+                  id="join-name-input"
+                  type="text"
+                  placeholder="Enter your name"
+                />
+              </div>
+            </div>
+
+            <button id="join-lobby-btn">Join Game</button>
+          </div>
+
+          <p id="landing-error" class="error"></p>
+        </div>
+      </section>
+
+      <!-- Lobby -->
+      <section id="lobby-screen" class="screen">
+        <div class="card">
+          <h2>Lobby</h2>
+          <p>
+            Difficulty:
+            <span id="lobby-difficulty"></span>
+          </p>
+          <p>
+            Game starts in
+            <span id="lobby-countdown">30</span>
+            seconds
+          </p>
+
+   <!-- 👇 Add this block -->
+<button id="start-now-btn" type="button" class="primary-btn hidden">
+  All players ready – start now
+</button>
+
+    <!-- 👆 -->
+
+
+
+
+          <h3>Players</h3>
+          <ul id="lobby-players"></ul>
+
+          <p class="small">
+            Anyone who opens this site and enters a name before the countdown
+            ends will join this game automatically.
+          </p>
+        </div>
+      </section>
+
+      <!-- Game -->
+      <section id="game-screen" class="screen">
+        <div class="game-layout">
+          <div class="game-main">
+            <div class="status-bar">
+              <div id="round-info">Round 1</div>
+              <div id="status-message">Watch the pattern…</div>
+            </div>
+
+            <!-- 3-2-1 countdown overlay -->
+            <div id="countdown-overlay" class="hidden">
+              <div id="countdown-number">3</div>
+            </div>
+
+            <div class="board">
+              <!-- Main Simon image -->
+              <img
+                id="simon-image"
+                src="/images/01_simon_no_lights.png"
+                alt="Simon game"
+              />
+
+              <!-- Invisible, fat-finger-friendly hit areas (four big quadrants) -->
+              <div class="pad pad-green" data-color="green"></div>
+              <div class="pad pad-red" data-color="red"></div>
+              <div class="pad pad-yellow" data-color="yellow"></div>
+              <div class="pad pad-blue" data-color="blue"></div>
+            </div>
+
+            <!-- Game actions (Give Up) -->
+            <div class="game-actions">
+              <button id="give-up-btn" class="give-up-btn">
+                Give Up
+              </button>
+            </div>
+          </div>
+
+          <aside class="sidebar">
+            <h3>Players</h3>
+            <ul id="game-players"></ul>
+          </aside>
+        </div>
+
+        <!-- Elimination pill -->
+        <div id="elimination-pill" class="elimination-pill hidden"></div>
+      </section>
+
+<section id="gameover-screen" class="screen">
+  <div class="card leaderboard-card">
+    <div class="leaderboard-header">
+      <span class="leaderboard-icon">🏆</span>
+      <span class="leaderboard-title">Leaderboard</span>
+    </div>
+
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th class="col-rank">#</th>
+          <th class="col-name">Name</th>
+          <th class="col-correct">Correct</th>
+          <th class="col-time">Time</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body"></tbody>
+    </table>
+
+    <button id="back-to-home-btn" class="leaderboard-close-btn">
+      Close
+    </button>
+  </div>
+</section>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/client.js"></script>
+  </body>
+</html>

@@ -1,0 +1,359 @@
+/* ====================================
+   MOBILE-FIRST LANDING PAGE
+   ==================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body.landing-body {
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh; /* better on iOS/Samsung */
+  background: radial-gradient(circle at top, #1d4ed8 0, #00172e 65%);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: #e5e7eb;
+}
+
+.landing-container {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* Card / pill that holds everything */
+.landing-card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  padding: 18px 16px 20px;
+  border-radius: 24px;
+
+  /* Soft inner gradient */
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(56, 189, 248, 0.07) 38%,
+      rgba(15, 23, 42, 0.92) 100%
+    );
+
+  border: 1px solid rgba(148, 163, 184, 0.25);
+
+  /* Base shadow (also animated) */
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.85),
+    0 0 40px rgba(56, 189, 248, 0.16);
+
+  text-align: center;
+  overflow: hidden;                    /* so gloss/shimmer stay clipped */
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+
+  /* Fade-in + glow pulse */
+  animation:
+    landingFadeIn 0.6s ease-out forwards,
+    cardGlowPulse 4.8s ease-in-out 0.6s infinite;
+
+  opacity: 0;
+}
+
+/* Top gloss + shimmer layer */
+.landing-card::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -60%;
+  width: 220%;
+  height: 55%;
+  border-radius: 50%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.22) 30%,
+    rgba(255, 255, 255, 0.35) 45%,
+    transparent 70%
+  );
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  animation: cardShimmer 6s linear 1.2s infinite;
+}
+
+/* Inner shadow for depth */
+.landing-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 18px rgba(15, 23, 42, 0.85),
+    inset 0 0 32px rgba(15, 23, 42, 0.75);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+/* Fade-in animation for the card */
+@keyframes landingFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Neon title */
+.landing-neon-title {
+  margin: 0 0 14px 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.26em;
+  color: #e9d5ff;
+  text-shadow:
+    0 0 3px #c084fc,
+    0 0 6px #a855f7;
+}
+
+/* Simon rotating lights */
+.simon-animation {
+  position: relative;
+  width: 72vw;
+  max-width: 260px;
+  height: auto;
+  margin: 4px auto 18px auto;
+  aspect-ratio: 1 / 1;
+}
+
+.simon-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.7s ease-in-out;
+}
+
+/* Sequential frame animation */
+.frame-yellow {
+  animation: simonCycle 4s infinite;
+  animation-delay: 0s;
+}
+.frame-green {
+  animation: simonCycle 4s infinite;
+  animation-delay: 1s;
+}
+.frame-blue {
+  animation: simonCycle 4s infinite;
+  animation-delay: 2s;
+}
+.frame-red {
+  animation: simonCycle 4s infinite;
+  animation-delay: 3s;
+}
+
+@keyframes simonCycle {
+  0%   { opacity: 0; }
+  5%   { opacity: 1; }
+  25%  { opacity: 1; }
+  30%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Soft glow pulse around the card */
+@keyframes cardGlowPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 18px 40px rgba(15, 23, 42, 0.85),
+      0 0 40px rgba(56, 189, 248, 0.16);
+  }
+  50% {
+    box-shadow:
+      0 24px 50px rgba(15, 23, 42, 0.95),
+      0 0 60px rgba(56, 189, 248, 0.3);
+  }
+}
+
+/* Shimmer sweep across the top gloss */
+@keyframes cardShimmer {
+  0% {
+    transform: translateX(-40%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  28% {
+    transform: translateX(40%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(40%);
+    opacity: 0;
+  }
+}
+
+/* Landing START button (index_01) – green pill with pulse */
+.landing-start-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.55); /* clean 1px stroke */
+  background: linear-gradient(135deg, #22dd66 0%, #16a34a 100%);
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  box-shadow:
+    0 4px 12px rgba(34, 197, 94, 0.45),
+    inset 0 0 6px rgba(255, 255, 255, 0.25);
+
+  animation: startPulse 2.2s ease-in-out infinite;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Button pulse (landing START) */
+@keyframes startPulse {
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.45);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.03);
+    box-shadow: 0 10px 24px rgba(34, 197, 94, 0.6);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.45);
+  }
+}
+
+/* Hover (desktop only) */
+@media (hover: hover) and (pointer: fine) {
+  .landing-start-btn:hover {
+    transform: scale(1.045);
+    box-shadow:
+      0 12px 32px rgba(34, 197, 94, 0.85),
+      inset 0 0 10px rgba(255, 255, 255, 0.35);
+  }
+}
+
+/* Active/tapped landing button */
+.landing-start-btn:active {
+  transform: translateY(1px) scale(0.99);
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.35);
+}
+
+/* Bevelled SINGLE PLAYER button */
+.start-btn-green {
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px 0;
+  border-radius: 999px;
+
+  background: linear-gradient(135deg, #22dd66 0%, #16a34a 100%);
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  /* 3D BEVEL */
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 6px 0 #0f3f1f,                        /* bottom hard edge */
+    0 10px 16px rgba(0,0,0,0.35),           /* outer drop shadow */
+    inset 0 3px 4px rgba(255,255,255,0.35), /* top inner shine */
+    inset 0 -3px 6px rgba(0,0,0,0.28);      /* bottom inner shadow */
+
+  transition: all 0.15s ease;
+}
+
+.start-btn-green:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 #0f3f1f,
+    0 4px 10px rgba(0,0,0,0.35),
+    inset 0 1px 3px rgba(255,255,255,0.25),
+    inset 0 -2px 4px rgba(0,0,0,0.3);
+}
+
+/* Bevelled MULTI PLAYER button */
+.start-btn-orange {
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px 0;
+  border-radius: 999px;
+
+  background: linear-gradient(135deg, #ff9f1c 0%, #ff5f00 100%);
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  /* 3D BEVEL */
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 6px 0 #7a2d00,                        /* bottom hard edge */
+    0 10px 16px rgba(0,0,0,0.35),           /* outer drop shadow */
+    inset 0 3px 4px rgba(255,255,255,0.30), /* top highlight */
+    inset 0 -3px 6px rgba(0,0,0,0.25);      /* lower shadow */
+
+  transition: all 0.15s ease;
+}
+
+.start-btn-orange:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 #7a2d00,
+    0 4px 10px rgba(0,0,0,0.35),
+    inset 0 1px 3px rgba(255,255,255,0.25),
+    inset 0 -2px 4px rgba(0,0,0,0.3);
+}
+
+/* Tiny footer */
+.landing-footer {
+  margin-top: 10px;
+  font-size: 0.7rem;
+  opacity: 0.55;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ====================================
+   Larger screens tweaks
+   ==================================== */
+
+@media (min-width: 640px) {
+  .landing-card {
+    max-width: 420px;
+    padding: 20px 18px 22px;
+  }
+
+  .landing-neon-title {
+    font-size: 1.6rem;
+  }
+
+  .landing-start-btn {
+    font-size: 1.05rem;
+  }
+}

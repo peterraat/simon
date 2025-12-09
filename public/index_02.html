@@ -3,25 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simon Memory Game</title>
-
+  <title>Select Mode</title>
   <link rel="stylesheet" href="/styles_01.css" />
-
-  <!-- Optional: preload images for smoother rotation -->
-  <link rel="preload" href="/images/05_simon_yellow_lights_on.png" as="image">
-  <link rel="preload" href="/images/02_simon_green_light_on.png" as="image">
-  <link rel="preload" href="/images/04_simon_blue_lights_on.png" as="image">
-  <link rel="preload" href="/images/03_simon_red_light_on.png" as="image">
 </head>
 
 <body class="landing-body">
 
   <div class="landing-container">
 
-    <!-- Single pill/card containing title + animation + button -->
     <div class="landing-card">
-      <h1 class="landing-neon-title">SIMON MEMORY GAME</h1>
+      <h1 class="landing-neon-title">CHOOSE MODE</h1>
 
+      <!-- SAME rotating Simon animation as index_01 -->
       <div class="simon-animation">
         <img src="/images/05_simon_yellow_lights_on.png" class="simon-frame frame-yellow" />
         <img src="/images/02_simon_green_light_on.png" class="simon-frame frame-green" />
@@ -29,19 +22,27 @@
         <img src="/images/03_simon_red_light_on.png" class="simon-frame frame-red" />
       </div>
 
-      <button id="landing-start" class="landing-start-btn">
-        START GAME
-      </button>
+      <!-- Buttons -->
+      <button id="btn-single" class="start-btn-green">SINGLE PLAYER</button>
+      <button id="btn-multi" class="start-btn-orange">MULTI PLAYER</button>
     </div>
 
     <p class="landing-footer">aslan games 2025</p>
+
   </div>
 
-  <script>
-    document.getElementById("landing-start").addEventListener("click", () => {
-      window.location.href = "/index_02.html";
-    });
-  </script>
+<script>
+  document.getElementById("btn-single").addEventListener("click", () => {
+    // Go to main game page with single-player preselected
+    window.location.href = "/game.html?mode=single";
+  });
+
+  document.getElementById("btn-multi").addEventListener("click", () => {
+    // Go to main game page with multiplayer preselected
+    window.location.href = "/game.html?mode=multi";
+  });
+</script>
+
 
 </body>
 </html>

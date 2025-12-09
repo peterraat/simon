@@ -52,6 +52,10 @@ const backToHomeBtn = document.getElementById("back-to-home-btn");
 const eliminationPill = document.getElementById("elimination-pill");
 const giveUpBtn = document.getElementById("give-up-btn");
 
+// ===== URL mode detection (from index_02) =====
+const urlParams = new URLSearchParams(window.location.search);
+const launchMode = urlParams.get("mode"); // "single", "multi", or null
+
 // ===== Local state =====
 const COLORS = ["green", "red", "yellow", "blue"];
 const MAX_NAME_LENGTH = 12;
@@ -490,6 +494,22 @@ function handleSingleGiveUp() {
 // ===== initial setup =====
 showScreen(landingScreen);
 setMode("single");
+
+// If we came from index_02 with a specific mode, respect it
+if (launchMode === "multi") {
+  setMode("multi");
+} else if (launchMode === "single") {
+  // Preselect single mode AND auto-start single player
+  setMode("single");
+
+  const autoName = sanitizeNameInput(singleNameInput, "You");
+  const autoDifficulty =
+    singleDifficultySelect && singleDifficultySelect.value
+      ? singleDifficultySelect.value
+      : "easy";
+
+  startSingleGameWithCountdown(autoName, autoDifficulty);
+}
 
 // ===== event listeners =====
 singleModeBtn.addEventListener("click", () => setMode("single"));
