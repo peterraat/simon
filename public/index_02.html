@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Select Mode</title>
+  <title>Select Mode – Simon Memory Game</title>
   <link rel="stylesheet" href="/styles_01.css" />
 </head>
 
 <body class="landing-body">
-
   <div class="landing-container">
 
     <div class="landing-card">
       <h1 class="landing-neon-title">CHOOSE MODE</h1>
 
-      <!-- SAME rotating Simon animation as index_01 -->
+      <!-- SAME rotating Simon animation as landing -->
       <div class="simon-animation">
         <img src="/images/05_simon_yellow_lights_on.png" class="simon-frame frame-yellow" />
         <img src="/images/02_simon_green_light_on.png" class="simon-frame frame-green" />
@@ -22,27 +21,59 @@
         <img src="/images/03_simon_red_light_on.png" class="simon-frame frame-red" />
       </div>
 
-      <!-- Buttons -->
+      <!-- Mode buttons -->
       <button id="btn-single" class="start-btn-green">SINGLE PLAYER</button>
       <button id="btn-multi" class="start-btn-orange">MULTI PLAYER</button>
+
+      <!-- Difficulty pill -->
+      <button id="btn-difficulty" class="difficulty-pill">
+        Difficulty: MEDIUM
+      </button>
     </div>
 
     <p class="landing-footer">aslan games 2025</p>
-
   </div>
 
-<script>
-  document.getElementById("btn-single").addEventListener("click", () => {
-    // Go to main game page with single-player preselected
-    window.location.href = "/game.html?mode=single";
-  });
+  <script>
+    const difficulties = ["easy", "medium", "hard", "insane", "impossible"];
 
-  document.getElementById("btn-multi").addEventListener("click", () => {
-    // Go to main game page with multiplayer preselected
-    window.location.href = "/game.html?mode=multi";
-  });
-</script>
+    const singleBtn = document.getElementById("btn-single");
+    const multiBtn = document.getElementById("btn-multi");
+    const difficultyBtn = document.getElementById("btn-difficulty");
 
+    // Load last difficulty from localStorage or default to medium
+    let currentDifficulty =
+      localStorage.getItem("simonDifficulty") || "medium";
 
+    function renderDifficultyLabel() {
+      const label = currentDifficulty.toUpperCase();
+      difficultyBtn.textContent = `Difficulty: ${label}`;
+    }
+
+    // Initial render
+    renderDifficultyLabel();
+
+    // Cycle difficulty on click
+    difficultyBtn.addEventListener("click", () => {
+      const idx = difficulties.indexOf(currentDifficulty);
+      const nextIndex = (idx + 1) % difficulties.length;
+      currentDifficulty = difficulties[nextIndex];
+      localStorage.setItem("simonDifficulty", currentDifficulty);
+      renderDifficultyLabel();
+    });
+
+    // Go to game with selected difficulty and auto-start single
+    singleBtn.addEventListener("click", () => {
+      const diff = encodeURIComponent(currentDifficulty);
+      window.location.href = `/game.html?mode=single&difficulty=${diff}`;
+    });
+
+    // MULTI PLAYER → go to modern multiplayer name screen
+    multiBtn.addEventListener("click", () => {
+      // Save current difficulty so multiplayer page can read it
+      localStorage.setItem("simonDifficulty", currentDifficulty);
+      window.location.href = `/multiplayer.html`;
+    });
+  </script>
 </body>
 </html>

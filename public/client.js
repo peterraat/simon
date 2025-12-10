@@ -52,16 +52,22 @@ const backToHomeBtn = document.getElementById("back-to-home-btn");
 const eliminationPill = document.getElementById("elimination-pill");
 const giveUpBtn = document.getElementById("give-up-btn");
 
-// ===== URL mode detection (from index_02) =====
+// ===== URL mode & difficulty detection (from index_02 / multiplayer) =====
 const urlParams = new URLSearchParams(window.location.search);
-const launchMode = urlParams.get("mode"); // "single", "multi", or null
+const launchMode = urlParams.get("mode");             // "single", "multi", or null
+const launchDifficulty = urlParams.get("difficulty"); // "easy", "medium", etc.
+const launchName = urlParams.get("name");             // from multiplayer.html
+
+// True when we came from multiplayer.html with a name already
+const launchedFromQueryMulti =
+  launchMode === "multi" && !!launchName;
 
 // ===== Local state =====
 const COLORS = ["green", "red", "yellow", "blue"];
 const MAX_NAME_LENGTH = 12;
 
 let mode = "single"; // "single" or "multi"
-let isHost = false; // are we the host in this lobby?
+let isHost = false;  // are we the host in this lobby?
 
 let currentRoomId = null;
 let myName = "";
@@ -76,7 +82,7 @@ const singleDifficultyConfig = {
   medium: { onTime: 600, offTime: 300 },
   hard: { onTime: 400, offTime: 200 },
   insane: { onTime: 300, offTime: 150 },
-  impossible: { onTime: 220, offTime: 120 }
+  impossible: { onTime: 100, offTime: 10 }
 };
 
 let spDifficulty = "easy";
@@ -115,10 +121,10 @@ const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
 const TONE_MAP = {
-  red: 440, // A4
+  red: 440,    // A4
   yellow: 554, // C#5
-  green: 659, // E5
-  blue: 330 // E4
+  green: 659,  // E5
+  blue: 330    // E4
 };
 
 function ensureAudioContext() {
@@ -297,11 +303,15 @@ function showEliminationPill(name, roundsSurvived) {
 
 // ===== Name sanitiser (client-side) =====
 function sanitizeNameInput(inputEl, fallback) {
-  let name = (inputEl.value || "").trim();
+  let raw = "";
+  if (inputEl && typeof inputEl.value === "string") {
+    raw = inputEl.value;
+  }
+  let name = raw.trim();
   if (!name) name = fallback;
   if (name.length > MAX_NAME_LENGTH) {
     name = name.slice(0, MAX_NAME_LENGTH);
-    inputEl.value = name; // reflect truncation in the UI
+    if (inputEl) inputEl.value = name; // reflect truncation in the UI
   }
   return name;
 }
@@ -370,6 +380,7 @@ function setMode(newMode) {
     multiModeBtn.classList.add("mode-btn-active");
 
     singleForm.classList.add("hidden");
+    // host vs join is decided by lobbyStatus
     socket.emit("checkActiveLobby");
   }
 }
@@ -492,23 +503,70 @@ function handleSingleGiveUp() {
 }
 
 // ===== initial setup =====
-showScreen(landingScreen);
-setMode("single");
+//
+// We now handle all flows here:
+//
+// 1) ?mode=single&difficulty=...   → auto-start single
+// 2) ?mode=multi&name=...&difficulty=... (from multiplayer.html) → auto host/join
+// 3) No params                        → original landing screen
+//
+if (launchMode === "multi" && launchName) {
+  // Came from multiplayer.html with a name & difficulty
+  mode = "multi";
+  myName =
+    launchName.length > MAX_NAME_LENGTH
+      ? launchName.slice(0, MAX_NAME_LENGTH)
+      : launchName;
 
-// If we came from index_02 with a specific mode, respect it
-if (launchMode === "multi") {
-  setMode("multi");
+  // Pre-set difficulty if provided
+  if (launchDifficulty && difficultySelect) {
+    const opt = Array.from(difficultySelect.options).find(
+      (o) => o.value === launchDifficulty
+    );
+    if (opt) {
+      difficultySelect.value = launchDifficulty;
+    }
+  }
+
+  // Visually select multiplayer mode & hide old forms
+  singleModeBtn.classList.remove("mode-btn-active");
+  multiModeBtn.classList.add("mode-btn-active");
+
+  singleForm.classList.add("hidden");
+  hostForm.classList.add("hidden");
+  joinForm.classList.add("hidden");
+
+  // Show lobby screen while we ask server if a lobby exists
+  showScreen(lobbyScreen);
+  socket.emit("checkActiveLobby");
 } else if (launchMode === "single") {
-  // Preselect single mode AND auto-start single player
+  // Came from index_02 as single → auto-start game
   setMode("single");
 
   const autoName = sanitizeNameInput(singleNameInput, "You");
-  const autoDifficulty =
-    singleDifficultySelect && singleDifficultySelect.value
-      ? singleDifficultySelect.value
-      : "easy";
+
+  let autoDifficulty = "easy";
+
+  // Prefer difficulty from URL if valid
+  if (launchDifficulty && singleDifficultyConfig[launchDifficulty]) {
+    autoDifficulty = launchDifficulty;
+  } else if (
+    singleDifficultySelect &&
+    singleDifficultySelect.value &&
+    singleDifficultyConfig[singleDifficultySelect.value]
+  ) {
+    autoDifficulty = singleDifficultySelect.value;
+  }
 
   startSingleGameWithCountdown(autoName, autoDifficulty);
+} else if (launchMode === "multi") {
+  // Multi requested but no name (fallback: original behaviour)
+  showScreen(landingScreen);
+  setMode("multi");
+} else {
+  // No mode in URL → default landing single-player mode
+  showScreen(landingScreen);
+  setMode("single");
 }
 
 // ===== event listeners =====
@@ -572,17 +630,36 @@ pads.forEach((pad) => {
 });
 
 backToHomeBtn.addEventListener("click", () => {
-  window.location.reload();
+  // Return to mode selection page (not the game)
+  window.location.href = "/index_02.html";
 });
 
 // ===== Socket events (multiplayer) =====
 socket.on("lobbyStatus", (payload) => {
   if (mode !== "multi") return;
 
-  // We are not the existing host in this flow
-  isHost = false;
-  if (startNowBtn) startNowBtn.classList.add("hidden");
+  // If we came from multiplayer.html with a name, auto host/join
+  if (launchedFromQueryMulti) {
+    if (payload.hasActiveLobby) {
+      // join the existing lobby with our name
+      socket.emit("joinLobby", { name: myName || "Player" });
+    } else {
+      // no active lobby → create one as host
+      let diff = launchDifficulty;
+      if (!diff && difficultySelect && difficultySelect.value) {
+        diff = difficultySelect.value;
+      }
+      if (!diff) diff = "medium";
 
+      socket.emit("createLobby", {
+        name: myName || "Host",
+        difficulty: diff
+      });
+    }
+    return; // don't show old host/join forms
+  }
+
+  // Original behaviour when selecting multi inside the game UI
   if (payload.hasActiveLobby) {
     hostForm.classList.add("hidden");
     joinForm.classList.remove("hidden");

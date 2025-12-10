@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simon – Multiplayer</title>
+
+  <link rel="stylesheet" href="/styles_01.css" />
+
+  <!-- optional, keeps animation smooth -->
+  <link rel="preload" href="/images/05_simon_yellow_lights_on.png" as="image">
+  <link rel="preload" href="/images/02_simon_green_light_on.png" as="image">
+  <link rel="preload" href="/images/04_simon_blue_lights_on.png" as="image">
+  <link rel="preload" href="/images/03_simon_red_light_on.png" as="image">
+</head>
+
+<body class="landing-body">
+  <div class="landing-container">
+    <div class="landing-card">
+      <h1 class="landing-neon-title">MULTI PLAYER</h1>
+
+      <!-- Same Simon animation as the other screens -->
+      <div class="simon-animation" style="margin-bottom: 18px;">
+        <img src="/images/05_simon_yellow_lights_on.png" class="simon-frame frame-yellow" />
+        <img src="/images/02_simon_green_light_on.png" class="simon-frame frame-green" />
+        <img src="/images/04_simon_blue_lights_on.png" class="simon-frame frame-blue" />
+        <img src="/images/03_simon_red_light_on.png" class="simon-frame frame-red" />
+      </div>
+
+      <!-- Name input pill -->
+      <div style="margin-bottom: 12px;">
+        <input
+          id="mp-name"
+          class="landing-input"
+          type="text"
+          placeholder="Enter your name"
+          maxlength="12"
+        />
+      </div>
+
+      <!-- Start multiplayer button -->
+      <button id="mp-start" class="start-btn-green">
+        START MULTI PLAYER
+      </button>
+
+      <!-- Back button -->
+      <button id="mp-back" class="start-btn-orange">
+        BACK TO MODE SELECT
+      </button>
+    </div>
+
+    <p class="landing-footer">aslan games 2025</p>
+  </div>
+
+  <script>
+    function getDifficulty() {
+      return localStorage.getItem("simonDifficulty") || "medium";
+    }
+
+    const nameInput = document.getElementById("mp-name");
+    const startBtn  = document.getElementById("mp-start");
+    const backBtn   = document.getElementById("mp-back");
+
+    startBtn.addEventListener("click", () => {
+      let name = nameInput.value.trim();
+      if (!name) {
+        alert("Please enter your name.");
+        return;
+      }
+      if (name.length > 12) name = name.slice(0, 12);
+
+      const difficulty = getDifficulty();
+      const url = `/game.html?mode=multi&name=${encodeURIComponent(
+        name
+      )}&difficulty=${encodeURIComponent(difficulty)}`;
+
+      // Go straight into the real multiplayer game
+      window.location.href = url;
+    });
+
+    backBtn.addEventListener("click", () => {
+      window.location.href = "/index_02.html";
+    });
+  </script>
+</body>
+</html>

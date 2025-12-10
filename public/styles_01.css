@@ -330,6 +330,42 @@ body.landing-body {
     inset 0 -2px 4px rgba(0,0,0,0.3);
 }
 
+/* Difficulty selector pill (third pill) */
+.difficulty-pill {
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px 0;
+  border-radius: 999px;
+
+  background: linear-gradient(135deg, #ee0e06 0%, #a80000 100%);
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  /* 3D BEVEL */
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 6px 0 #7a2d00,                        /* bottom hard edge */
+    0 10px 16px rgba(0,0,0,0.35),           /* outer drop shadow */
+    inset 0 3px 4px rgba(255,255,255,0.30), /* top highlight */
+    inset 0 -3px 6px rgba(0,0,0,0.25);      /* lower shadow */
+
+  transition: all 0.15s ease;
+}
+
+.difficulty-pill:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 #7a2d00,
+    0 4px 10px rgba(0,0,0,0.35),
+    inset 0 1px 3px rgba(255,255,255,0.25),
+    inset 0 -2px 4px rgba(0,0,0,0.3);
+}
+
+
 /* Tiny footer */
 .landing-footer {
   margin-top: 10px;
@@ -356,4 +392,17 @@ body.landing-body {
   .landing-start-btn {
     font-size: 1.05rem;
   }
+}
+
+/* Universal glossy input pill */
+.landing-input {
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.15);
+  color: white;
+  font-size: 1.05rem;
+  outline: none;
+  backdrop-filter: blur(4px);
 }
