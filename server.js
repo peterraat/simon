@@ -160,24 +160,33 @@ function computeRoundSummary(room) {
 function checkEndOfRound(room) {
   if (!room) return;
 
-  const allFinished = room.players.every((p) => p.finishedRound);
-  if (!allFinished) return;
+  // Has every *alive* player finished their input for this round?
+  const alivePlayers = room.players.filter(p => p.alive);
+  const allAliveFinished = alivePlayers.every(p => p.finishedRound);
 
-  const summary = computeRoundSummary(room);
-  io.to(room.id).emit("roundSummary", { summary });
+  if (!allAliveFinished) return;
 
-  const alivePlayers = room.players.filter((p) => p.alive);
+  // Everyone who is still alive has now survived this round
+  // (their roundsSurvived will be used for the leaderboard)
+  alivePlayers.forEach(p => {
+    if (p.roundsSurvived < room.round) {
+      p.roundsSurvived = room.round;
+    }
+  });
 
-  // Co-op style: only end when ALL players are out
   if (alivePlayers.length === 0) {
+    // No one left alive: the *last* remaining player
+    // has just failed, so now the game is truly over.
     endGame(room);
   } else {
-    // At least one still alive → continue with next round
+    // At least one player is still alive → continue the game.
+    // Next round will be harder / longer for those survivors.
     setTimeout(() => {
       startNextRound(room);
     }, 1000);
   }
 }
+
 
 function endGame(room) {
   if (!room) return;
